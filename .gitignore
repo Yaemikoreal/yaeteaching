@@ -30,6 +30,9 @@ yarn-error.log*
 # Testing
 coverage/
 .nyc_output/
+.coverage
+coverage.json
+.pytest_cache/
 
 # Misc
 *.pem

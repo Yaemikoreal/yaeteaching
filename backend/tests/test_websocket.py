@@ -215,3 +215,131 @@ class TestRouterGenerateValidation:
             },
         )
         assert response.status_code == 200
+
+
+class TestConnectionManagerAsync:
+    """Tests for ConnectionManager async methods."""
+
+    @pytest.mark.asyncio
+    async def test_connect_creates_connection_list(self):
+        """Test connect creates connection list for new job."""
+        from unittest.mock import MagicMock
+
+        new_manager = ConnectionManager()
+        mock_ws = MagicMock()
+
+        # Mock accept method
+        mock_ws.accept = MagicMock(return_value=None)
+        # Make accept async
+        async def mock_accept():
+            pass
+        mock_ws.accept = mock_accept
+
+        await new_manager.connect("job-1", mock_ws)
+
+        assert "job-1" in new_manager.active_connections
+        assert mock_ws in new_manager.active_connections["job-1"]
+
+    def test_disconnect_removes_connection(self):
+        """Test disconnect removes connection properly."""
+        from unittest.mock import MagicMock
+
+        new_manager = ConnectionManager()
+        mock_ws = MagicMock()
+
+        # Manually add connection
+        new_manager.active_connections["job-1"] = [mock_ws]
+
+        new_manager.disconnect("job-1", mock_ws)
+
+        assert "job-1" not in new_manager.active_connections
+
+    def test_disconnect_keeps_other_connections(self):
+        """Test disconnect doesn't remove other connections."""
+        from unittest.mock import MagicMock
+
+        new_manager = ConnectionManager()
+        mock_ws1 = MagicMock()
+        mock_ws2 = MagicMock()
+
+        # Add multiple connections
+        new_manager.active_connections["job-1"] = [mock_ws1, mock_ws2]
+
+        new_manager.disconnect("job-1", mock_ws1)
+
+        assert "job-1" in new_manager.active_connections
+        assert mock_ws2 in new_manager.active_connections["job-1"]
+
+    @pytest.mark.asyncio
+    async def test_broadcast_no_connections(self):
+        """Test broadcast with no connections."""
+        new_manager = ConnectionManager()
+
+        msg = ProgressMessage(
+            job_id="no-connections-job",
+            task_type=ProductType.lesson,
+            status=TaskStatus.in_progress,
+            progress=50,
+        )
+
+        # Should not crash
+        await new_manager.broadcast("no-connections-job", msg)
+
+    @pytest.mark.asyncio
+    async def test_broadcast_to_connections(self):
+        """Test broadcast sends to all connections."""
+        from unittest.mock import MagicMock, AsyncMock
+
+        new_manager = ConnectionManager()
+        mock_ws1 = MagicMock()
+        mock_ws2 = MagicMock()
+
+        # Setup async send_text methods
+        mock_ws1.send_text = AsyncMock()
+        mock_ws2.send_text = AsyncMock()
+
+        # Add connections
+        new_manager.active_connections["job-1"] = [mock_ws1, mock_ws2]
+
+        msg = ProgressMessage(
+            job_id="job-1",
+            task_type=ProductType.lesson,
+            status=TaskStatus.completed,
+            progress=100,
+        )
+
+        await new_manager.broadcast("job-1", msg)
+
+        # Both connections should receive message
+        mock_ws1.send_text.assert_called_once()
+        mock_ws2.send_text.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_broadcast_cleans_dead_connections(self):
+        """Test broadcast removes dead connections."""
+        from unittest.mock import MagicMock, AsyncMock
+
+        new_manager = ConnectionManager()
+        good_ws = MagicMock()
+        dead_ws = MagicMock()
+
+        # Good connection works
+        good_ws.send_text = AsyncMock()
+        # Dead connection raises error
+        dead_ws.send_text = AsyncMock(side_effect=Exception("Connection dead"))
+
+        # Add both connections
+        new_manager.active_connections["job-1"] = [good_ws, dead_ws]
+
+        msg = ProgressMessage(
+            job_id="job-1",
+            task_type=ProductType.lesson,
+            status=TaskStatus.in_progress,
+            progress=50,
+        )
+
+        await new_manager.broadcast("job-1", msg)
+
+        # Dead connection should be removed
+        assert dead_ws not in new_manager.active_connections.get("job-1", [])
+        assert good_ws in new_manager.active_connections.get("job-1", [])

@@ -1,8 +1,5 @@
 """Unit tests for Voice/TTS generation service."""
 import pytest
-import tempfile
-import os
-from unittest.mock import patch, MagicMock
 from services.voice import VoiceGenerator
 
 

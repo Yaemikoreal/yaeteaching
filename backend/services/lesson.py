@@ -1,9 +1,8 @@
 """Lesson generation service using LLM."""
 import json
 import httpx
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from config.settings import settings
-from models.lesson import LessonJSON, LessonMeta, LessonOutline, LessonSection
 
 
 # Prompt template for lesson generation

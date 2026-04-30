@@ -1,6 +1,4 @@
 """Voice/TTS generation service."""
-from config.settings import settings
-from models.lesson import LessonJSON
 
 
 class VoiceGenerator:
@@ -45,8 +43,8 @@ class VoiceGenerator:
 
         TODO: Implement ChatTTS integration
         """
-        title = section.get("title", "")
-        content = section.get("content", "")
+        section.get("title", "")
+        section.get("content", "")
 
         # Placeholder: would call ChatTTS here
         # audio = self._call_chattts(f"{title}: {content}")

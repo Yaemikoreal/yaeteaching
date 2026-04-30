@@ -1,6 +1,5 @@
 """Celery async tasks for content generation."""
 from celery import shared_task
-from celery.config import celery_app
 from models.job import TaskStatus, ProductType
 import asyncio
 

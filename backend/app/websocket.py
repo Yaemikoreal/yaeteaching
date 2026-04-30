@@ -1,7 +1,6 @@
 """WebSocket handler for progress updates."""
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from models.job import ProgressMessage, TaskStatus, ProductType
-import asyncio
 import json
 
 websocket_router = APIRouter()
@@ -57,7 +56,7 @@ async def websocket_progress(websocket: WebSocket, job_id: str):
     try:
         while True:
             # Keep connection alive, wait for client messages
-            data = await websocket.receive_text()
+            await websocket.receive_text()
 
             # Echo back for testing
             # In production, this would receive commands or just keep alive

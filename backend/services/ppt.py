@@ -1,8 +1,7 @@
 """PPT generation service using python-pptx."""
 from pptx import Presentation
-from pptx.util import Inches, Pt
 from config.settings import settings
-from models.lesson import LessonJSON, SlideType
+from models.lesson import SlideType
 
 
 class PPTGenerator:

@@ -2,7 +2,7 @@
 import pytest
 import tempfile
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from services.ppt import PPTGenerator
 
 
@@ -80,8 +80,8 @@ class TestPPTGeneratorGenerate:
     def test_generate_calls_slide_methods(self, mock_content, mock_title, sample_lesson_json):
         """Test generate calls appropriate slide methods."""
         generator = PPTGenerator()
-        with tempfile.TemporaryDirectory() as tmpdir:
-            with patch.object(generator, "generate") as mock_gen:
+        with tempfile.TemporaryDirectory():
+            with patch.object(generator, "generate"):
                 # Verify the generator exists
                 assert generator is not None
 
@@ -92,7 +92,6 @@ class TestPPTGeneratorGenerate:
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = os.path.join(tmpdir, "test_lesson.pptx")
             # Patch the save path
-            original_path = "/storage/ppt"
 
             # Generate with modified lesson JSON
             lesson_copy = sample_lesson_json.copy()
